@@ -98,7 +98,7 @@ colors = [
     ["#282c34", "#282c34"], # panel background
     ["#3d3f4b", "#434758"], # background for current screen tab
     ["#ffffff", "#ffffff"], # font color for group names
-    ["#ff5555", "#ff5555"], # border line color for current tab
+    ["#eb7b6c", "#eb7b6c"], # border line color for current tab
     ["#74438f", "#74438f"], # border line color for 'other tabs' and color for 'odd widgets'
     ["#4f76c7", "#4f76c7"], # color for the 'even widgets'
     ["#e1acff", "#e1acff"], # window name
@@ -174,6 +174,7 @@ def open_play_pause_spotify(qtile):
         )
 
 def change_audio_output(qtile):
+    qtile.cmd_spawn("pacmd set-card-profile alsa_card.pci-0000_03_00.1 off")
     qtile.cmd_spawn(
         '''pacmd set-card-profile alsa_card.pci-0000_00_1f.3
         output:analog-stereo+input:analog-stereo'''
@@ -181,16 +182,28 @@ def change_audio_output(qtile):
 
     card_name = "alsa_card.usb-C-Media_INC._USB_Sound_Device-00"
 
-    list_cards_array = "pacmd list-cards".split(' ')
-    speakers_on_cmd = f"pacmd set-card-profile {card_name} output:iec958-stereo"
+    # list_cards_array = "pacmd list-cards".split(' ')
+    speakers_on_cmd = f"pacmd set-card-profile {card_name} output:analog-stereo"
     speakers_off_cmd = f"pacmd set-card-profile {card_name} off"
 
-    cards = subprocess.run(list_cards_array, capture_output=True).stdout.decode('utf-8')
+    # cards = subprocess.run(list_cards_array, capture_output=True).stdout.decode('utf-8')
 
-    if 'active profile: <off>' in cards:
-        qtile.cmd_spawn(speakers_on_cmd)
-    else:
+    # la siguiente linea obtiene todas las cards con sus active profile
+    cards = subprocess.check_output(
+        "pacmd list-cards | grep -e 'active profile:' -e 'index:'",
+        shell=True
+    ).decode('utf-8')
+    # aca busco el primer > porque ahi es donde termina la primera card
+    # ya que el active profile termina con >
+    # i = cards.find('>') + 1
+    # # aca corto la variable cards para q solo incluya la primera card
+    # cards = cards[:i]
+
+    if 'active profile: <output:analog-stereo>' in cards:
         qtile.cmd_spawn(speakers_off_cmd)
+    else:
+        qtile.cmd_spawn(speakers_on_cmd)
+    
 
 
 
@@ -258,7 +271,7 @@ screens = [
             ],
             24,
         ),
-        wallpaper='~/wallpapers/aver.jpg',
+        wallpaper='~/wallpapers/nuevo.jpg',
         wallpaper_mode='stretch'
     ),
 ]
@@ -312,7 +325,7 @@ keys.extend([
     Key([mod, "shift"], "b", lazy.spawn(browser), desc="Launch brave"),
     Key([mod, "shift"], "c", lazy.spawn("clementine"), desc="Launch clementine music player"),
     Key([mod, "shift"], "s", lazy.spawn("slack"), desc="Launch slack"),
-    Key([], "Print", lazy.function(screenshot), desc="copy area screenshot to clipboard"),
+    Key([mod], "a", lazy.function(screenshot), desc="copy area screenshot to clipboard"),
     # Sound
     Key(
         [mod], "i",
