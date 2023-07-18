@@ -24,18 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import subprocess, os
-
+import os
+import subprocess
 from typing import List  # noqa: F401
 
-from libqtile import bar, layout, widget, hook, qtile
+from libqtile import bar, hook, layout, qtile, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 
 mod = "mod4"
 terminal = "kitty"
-browser = "brave-browser"
+browser = "brave-browser --high-dpi-support=1 --force-device-scale-factor=1.125"
 
 ##### HOOKS #####
 # @hook.subscribe.startup_once
@@ -223,19 +223,25 @@ def increase_decrease_volume(qtile, direction):
 
 
 ##### TOPBAR #####
+
+window_name = widget.WindowName(
+    font = "monospace semibold",
+    foreground = colors[6],
+    background = colors[0],
+    padding = 0
+)
+
 screens = [
     Screen(
         top=bar.Bar(
             [
                 widget.CurrentLayout(),
-                widget.GroupBox(),
-                widget.Prompt(),
-                widget.WindowName(
-                       font = "monospace semibold",
-                       foreground = colors[6],
-                       background = colors[0],
-                       padding = 0
+                widget.GroupBox(
+                    fontsize=15
                 ),
+                widget.Prompt(),
+                window_name,
+                # widget.WindowName(**window_name, fontsize=14),
                 widget.Image(
                     filename='~/qtile/images/spotify-byn.svg',
                     mouse_callbacks={
@@ -255,18 +261,18 @@ screens = [
                 widget.Clock(format='%d/%m/%Y, %H:%M:%S'),
                 widget.QuickExit(),
                 widget.Volume(
-                       foreground=colors[2],
-                       background=colors[5],
-                       padding=5,
-                       mouse_callbacks={
-                           'Button1': lazy.function(
-                               mouse_callback,
-                               'amixer -D pulse set Master 1+ toggle'
-                           ),
-                           'Button3': lazy.function(
-                               change_audio_output
-                           ),
-                       }
+                        foreground=colors[2],
+                        background=colors[5],
+                        padding=5,
+                        mouse_callbacks={
+                            'Button1': lazy.function(
+                                mouse_callback,
+                                'amixer -D pulse set Master 1+ toggle'
+                            ),
+                            'Button3': lazy.function(
+                                change_audio_output
+                            ),
+                        }
                 ),
             ],
             24,
@@ -274,6 +280,12 @@ screens = [
         wallpaper='~/wallpapers/nuevo.jpg',
         wallpaper_mode='stretch'
     ),
+    Screen(
+        top=bar.Bar([
+            widget.GroupBox(),
+            window_name,
+        ], 24)
+    )
 ]
 
 # Drag floating layouts.
